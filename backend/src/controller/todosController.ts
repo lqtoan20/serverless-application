@@ -2,10 +2,10 @@ import * as uuid from 'uuid'
 import { TodoItem } from '../models/TodoItem'
 import { TodosAccess } from '../service/todosService'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
-import { APIGatewayProxyEvent } from 'aws-lambda'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { getUserId } from '../lambda/utils'
 import { createLogger } from '../utils/logger'
-
+import * as createError from 'http-errors'
 // import { AttachmentUtils } from './attachmentUtils';
 // import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 
@@ -43,26 +43,30 @@ export async function getTodosForUser(
   return listTodos
 }
 
-// export async function deleteTodo(
-//   todoId: string,
-//   userId: string
-// ): Promise<void> {
-//   logger.info('Deleting todo item', {
-//     todoId,
-//     userId
-//   })
+export async function deleteTodo(
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+  const userId = getUserId(event)
+  const todoId = event.pathParameters.todoId
+  logger.info('Deleting todo item', {
+    todoId,
+    userId
+  })
+  const todoItem = await todosAccess.checkTodoIdExists(todoId, userId)
 
-//   const todoItem = await todosAccess.getTodoItem(todoId)
+  if (!todoItem) {
+    throw new createError.NotFound(`Todo item not found with id ${todoId}`)
+  }
 
-//   if (!todoItem) {
-//     throw new createError.NotFound(`Todo item not found with id ${todoId}`)
-//   }
+  await todosAccess.deleteTodoItem(todoId, userId)
 
-//   if (todoItem.userId !== userId) {
-//     throw new createError.Forbidden(
-//       'Cannot delete todo item that belongs to another user'
-//     )
-//   }
-
-//   await todosAccess.deleteTodoItem(todoId)
-// }
+  return {
+    statusCode: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+      status: 'Deleted successfully'
+    })
+  }
+}

@@ -1,25 +1,31 @@
-// import 'source-map-support/register'
+import 'source-map-support/register'
 
-// import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-// import * as middy from 'middy'
-// import { cors, httpErrorHandler } from 'middy/middlewares'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import * as middy from 'middy'
+import { cors, httpErrorHandler } from 'middy/middlewares'
+import { deleteTodo } from '../../controller/todosController'
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('createTodoHandler')
 
-// import { deleteTodo } from '../../businessLogic/todos'
-// import { getUserId } from '../utils'
+export const handler = middy(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      return await deleteTodo(event)
+    } catch (error) {
+      logger.error(`Error deleted Todo item: ${error.message}`)
 
-// export const handler = middy(
-//   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-//     const todoId = event.pathParameters.todoId
-//     // TODO: Remove a TODO item by id
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'Some thing was wrong ! Please see log to detail'
+        })
+      }
+    }
+  }
+)
 
-//     return undefined
-//   }
-// )
-
-// handler
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true
-//     })
-//   )
+handler.use(httpErrorHandler()).use(
+  cors({
+    credentials: true
+  })
+)
