@@ -1,25 +1,41 @@
-// import 'source-map-support/register'
+import 'source-map-support/register'
 
-// import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-// import * as middy from 'middy'
-// import { cors, httpErrorHandler } from 'middy/middlewares'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import * as middy from 'middy'
+import { cors, httpErrorHandler } from 'middy/middlewares'
+import { createAttachmentPresignedUrl } from '../../controller/attachmentController'
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('uploadTodoHandler')
 
-// import { createAttachmentPresignedUrl } from '../../businessLogic/todos'
-// import { getUserId } from '../utils'
+export const handler = middy(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      const presignedUrl = await createAttachmentPresignedUrl(event)
 
-// export const handler = middy(
-//   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-//     const todoId = event.pathParameters.todoId
-//     // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
+      return {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+          uploadUrl: presignedUrl
+        })
+      }
+    } catch (error) {
+      logger.error(`Error creating upload image: ${error.message}`)
 
-//     return undefined
-//   }
-// )
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'Could not upload attachment !'
+        })
+      }
+    }
+  }
+)
 
-// handler
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true
-//     })
-//   )
+handler.use(httpErrorHandler()).use(
+  cors({
+    credentials: true
+  })
+)
