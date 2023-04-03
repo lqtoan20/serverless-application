@@ -3,7 +3,7 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
-import { createAttachmentPresignedUrl } from '../../controller/attachmentController'
+import { createAttachmentPresignedUrl } from '../../businessLogic/attachmentUpload'
 import { createLogger } from '../../utils/logger'
 const logger = createLogger('uploadTodoHandler')
 

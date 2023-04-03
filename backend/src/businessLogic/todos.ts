@@ -1,6 +1,6 @@
 import * as uuid from 'uuid'
 import { TodoItem } from '../models/TodoItem'
-import { TodosAccess } from '../service/todosService'
+import { TodosAccess } from '../dataLayer/todosAccess'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { getUserId } from '../lambda/utils'

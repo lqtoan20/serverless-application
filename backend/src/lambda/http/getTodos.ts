@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-import { getTodosForUser } from '../../controller/todosController'
+import { getTodosForUser } from '../../businessLogic/todos'
 import { createLogger } from '../../utils/logger'
 const logger = createLogger('getTodoHandler')
 
