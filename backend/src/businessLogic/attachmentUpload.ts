@@ -3,7 +3,7 @@ import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
 import { createLogger } from '../utils/logger'
 import * as createError from 'http-errors'
-import { TodosAccess } from '../service/todosService'
+import { TodosAccess } from '../dataLayer/todosAccess'
 import * as uuid from 'uuid'
 import { getUserId } from '../lambda/utils'
 
