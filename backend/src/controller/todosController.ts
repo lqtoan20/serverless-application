@@ -6,11 +6,9 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { getUserId } from '../lambda/utils'
 import { createLogger } from '../utils/logger'
 import * as createError from 'http-errors'
-// import { AttachmentUtils } from './attachmentUtils';
-// import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
+import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 
 const todosAccess = new TodosAccess()
-// const attachmentUtils = new AttachmentUtils()
 const logger = createLogger('todos')
 
 export async function createTodo(
@@ -52,9 +50,9 @@ export async function deleteTodo(
     todoId,
     userId
   })
-  const todoItem = await todosAccess.checkTodoIdExists(todoId, userId)
+  const isExistsTodo = await todosAccess.checkTodoIdExists(todoId, userId)
 
-  if (!todoItem) {
+  if (!isExistsTodo) {
     throw new createError.NotFound(`Todo item not found with id ${todoId}`)
   }
 
@@ -68,5 +66,34 @@ export async function deleteTodo(
     body: JSON.stringify({
       status: 'Deleted successfully'
     })
+  }
+}
+
+export async function updateTodo(
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+  const userId = getUserId(event)
+  const todoId = event.pathParameters.todoId
+
+  logger.info('Update todo item', {
+    todoId,
+    userId
+  })
+
+  const isExistsTodo = await todosAccess.checkTodoIdExists(todoId, userId)
+
+  if (!isExistsTodo) {
+    throw new createError.NotFound(`Todo item not found with id ${todoId}`)
+  }
+  const todo: UpdateTodoRequest = JSON.parse(event.body)
+
+  await todosAccess.updateTodo(todoId, userId, todo)
+
+  return {
+    statusCode: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify(todo)
   }
 }

@@ -3,6 +3,7 @@ import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { TodoItem } from '../models/TodoItem'
+import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 const XAWS = AWSXRay.captureAWSClient(new AWS.DynamoDB())
 const logger = createLogger('todoAccess')
 export class TodosAccess {
@@ -12,7 +13,7 @@ export class TodosAccess {
         service: XAWS
       }
     ),
-    private readonly todosTable = process.env.TODOS_TABLE, // private readonly indexName = process.env.TODOS_INDEX
+    private readonly todosTable = process.env.TODOS_TABLE,
     private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET
   ) {}
 
@@ -68,9 +69,8 @@ export class TodosAccess {
   }
 
   async checkTodoIdExists(todoId: string, userId): Promise<boolean> {
-    logger.info(`Updating attachmentUrl ${todoId}`)
-
     logger.info(`Verify todo ${todoId}`)
+
     const result = await this.docClient
       .get({
         TableName: this.todosTable,
@@ -97,38 +97,27 @@ export class TodosAccess {
       })
       .promise()
   }
+
+  async updateTodo(
+    userId: string,
+    todoId: string,
+    updateData: UpdateTodoRequest
+  ): Promise<void> {
+    logger.info(`Updating a Todo item with id ${todoId}`)
+
+    await this.docClient
+      .update({
+        TableName: this.todosTable,
+        Key: { userId, todoId },
+        UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
+        ExpressionAttributeNames: { '#name': 'name' },
+        ExpressionAttributeValues: {
+          ':name': updateData.name,
+          ':dueDate': updateData.dueDate,
+          ':done': updateData.done
+        },
+        ReturnValues: 'ALL_NEW'
+      })
+      .promise()
+  }
 }
-
-//   async updateTodoItem(
-//     todoId: string,
-//     userId: string,
-//     updatedTodo: TodoUpdate
-//   ): Promise<TodoItem> {
-//     // logger.info(`Updating a Todo item with id ${todoId}`)
-
-//     await this.docClient
-//       .update({
-//         TableName: this.todosTable,
-//         Key: {
-//           todoId,
-//           userId
-//         },
-//         UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
-//         ExpressionAttributeNames: {
-//           '#name': 'name'
-//         },
-//         ExpressionAttributeValues: {
-//           ':name': updatedTodo.name,
-//           ':dueDate': updatedTodo.dueDate,
-//           ':done': updatedTodo.done
-//         },
-//         ReturnValues: 'ALL_NEW'
-//       })
-//       .promise()
-
-//     return {
-//       ...updatedTodo,
-//       todoId,
-//       userId
-//     }
-//   }
