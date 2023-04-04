@@ -6,6 +6,14 @@ import { TodoItem } from '../models/TodoItem'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 const XAWS = AWSXRay.captureAWSClient(new AWS.DynamoDB())
 const logger = createLogger('todoAccess')
+
+const XAWS_IMAGE = AWSXRay.captureAWS(AWS)
+// To fix issue: The expiration must be a number, received string
+const urlExpiration = parseInt(process.env.SIGNED_URL_EXPIRATION)
+const s3 = new XAWS_IMAGE.S3({
+  signatureVersion: 'v4'
+})
+
 export class TodosAccess {
   constructor(
     private readonly docClient: DocumentClient = new AWS.DynamoDB.DocumentClient(
@@ -72,8 +80,18 @@ export class TodosAccess {
     return result
   }
 
-  async updateAttachmentUrl(todoId: string, attachmentId: string, userId) {
+  async updateAttachmentUrl(
+    todoId: string,
+    attachmentId: string,
+    userId
+  ): Promise<string> {
     logger.info(`Updating attachmentUrl ${todoId}`)
+
+    const uploadUrl = s3.getSignedUrl('putObject', {
+      Bucket: this.bucketName,
+      Key: attachmentId,
+      Expires: urlExpiration
+    })
 
     await this.docClient
       .update({
@@ -89,6 +107,8 @@ export class TodosAccess {
         }
       })
       .promise()
+
+    return uploadUrl
   }
 
   async checkTodoIdExists(todoId: string, userId): Promise<boolean> {
