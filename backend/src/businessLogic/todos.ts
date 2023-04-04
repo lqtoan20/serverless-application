@@ -37,8 +37,17 @@ export async function getTodosForUser(
   logger.info('Get list Todo by User ID')
   const userId = getUserId(event)
   const listTodos = todosAccess.getListTodos(userId)
-
   return listTodos
+}
+
+export async function getTodosWithPagination(
+  event: APIGatewayProxyEvent,
+  nextKey: JSON,
+  limit: number
+) {
+  const userId = getUserId(event)
+
+  return await todosAccess.getListTodosWithPagination(userId, nextKey, limit)
 }
 
 export async function deleteTodo(

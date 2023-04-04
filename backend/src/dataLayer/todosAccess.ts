@@ -49,6 +49,29 @@ export class TodosAccess {
     return items as TodoItem[]
   }
 
+  async getListTodosWithPagination(
+    userId: string,
+    nextKey: JSON,
+    limit: number
+  ) {
+    logger.info(`Getting all Todo items for user ${userId}`)
+
+    const result = await this.docClient
+      .query({
+        TableName: this.todosTable,
+        Limit: limit,
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: {
+          ':userId': userId
+        },
+        ExclusiveStartKey: nextKey,
+        ScanIndexForward: false
+      })
+      .promise()
+
+    return result
+  }
+
   async updateAttachmentUrl(todoId: string, attachmentId: string, userId) {
     logger.info(`Updating attachmentUrl ${todoId}`)
 
