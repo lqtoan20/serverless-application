@@ -14,7 +14,7 @@ export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       const nextKey = parseNextKeyParameter(event)
-      const limit = parseLimitKeyParameter(event) || 20
+      const limit = parseLimitKeyParameter(event)
 
       if (!limit) {
         const todoItems = await getTodosForUser(event)
